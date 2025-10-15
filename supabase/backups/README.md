@@ -2,27 +2,43 @@
 
 This directory contains SQL backup files for the Dashboard Undeniable application.
 
+## ⚠️ IMPORTANT UPDATE (2025-10-15)
+
+**The old `complete_production_schema.sql` has been DEPRECATED and renamed to `DEPRECATED_complete_production_schema.sql`**
+
+**For new deployments, use**: `../migrations/CLIENT_DEPLOYMENT_COMPLETE_SCHEMA.sql`
+
 ## Directory Structure
 
 ```
 backups/
 ├── README.md (this file)
 ├── sql-scripts/
-│   ├── complete_production_schema.sql    # Complete schema + data backup
-│   ├── backup.sql                        # Data-only backup (empty)
-│   └── database-export.sql               # Data-only export (empty)
-└── pre-restore/                          # Auto-created before restores
-    └── backup-before-restore-*.sql       # Pre-restore safety backups
+│   ├── DEPRECATED_complete_production_schema.sql  # OLD - DO NOT USE
+│   ├── DEPRECATED_README.md                       # Explains why deprecated
+│   ├── backup.sql                                 # Data-only backup (empty)
+│   └── database-export.sql                        # Data-only export (empty)
+└── pre-restore/                                   # Auto-created before restores
+    └── backup-before-restore-*.sql                # Pre-restore safety backups
 ```
 
 ## Backup File Types
 
-### Schema + Data Backups
-**Files**: `complete_production_schema.sql`
-- Contains full database structure (tables, functions, policies) AND all data
-- Self-contained - can restore to completely empty database
-- Size: Large (varies based on data)
-- Use for: Complete disaster recovery, setting up new instances
+### Current Schema File (RECOMMENDED)
+**Location**: `../migrations/CLIENT_DEPLOYMENT_COMPLETE_SCHEMA.sql`
+- **USE THIS** for all new client deployments
+- Contains complete post-refactor schema with new permission system
+- Includes: roles, userRoles, profiles tables
+- Has updated RLS policies and goals_config column
+- Self-contained and up-to-date
+
+### Deprecated Schema Backup
+**File**: `DEPRECATED_complete_production_schema.sql`
+- ⚠️ **DO NOT USE** - Outdated and missing critical updates
+- Missing new permission system tables
+- Missing goals_config column
+- Has outdated RLS policies
+- Kept only for historical reference
 
 ### Data-Only Backups
 **Files**: `backup.sql`, `database-export.sql`
