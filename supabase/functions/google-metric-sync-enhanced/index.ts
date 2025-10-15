@@ -1,6 +1,7 @@
 // Enhanced Google Metric Sync Edge Function
 // Handles bulk metric synchronization from Google Sheets to enhanced metrics table
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { create as createJWT } from 'https://deno.land/x/djwt@v3.0.2/mod.ts';
 
 // Enhanced interfaces for bulk operations
 interface BulkMetricEntry {
@@ -288,11 +289,6 @@ class EnhancedGoogleSheetsAPI {
     console.log('🔍 Private key starts with:', privateKey.substring(0, 30));
 
     // Create JWT for service account authentication
-    const header = {
-      alg: 'RS256',
-      typ: 'JWT'
-    };
-
     const now = Math.floor(Date.now() / 1000);
     const payload = {
       iss: serviceAccountEmail,
@@ -302,7 +298,21 @@ class EnhancedGoogleSheetsAPI {
       exp: now + 3600
     };
 
-    const jwt = await this.createJWT(header, payload, privateKey);
+    // Import the private key for JWT signing
+    const cryptoKey = await crypto.subtle.importKey(
+      'pkcs8',
+      this.pemToArrayBuffer(privateKey),
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    // Create JWT using djwt library
+    const jwt = await createJWT(
+      { alg: 'RS256', typ: 'JWT' },
+      payload,
+      cryptoKey
+    );
     
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -316,37 +326,6 @@ class EnhancedGoogleSheetsAPI {
 
     const tokenData = await response.json();
     return tokenData.access_token;
-  }
-
-  private static async createJWT(header: any, payload: any, privateKey: string): Promise<string> {
-    const encoder = new TextEncoder();
-    
-    const headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    
-    const signatureInput = `${headerB64}.${payloadB64}`;
-    const signature = await this.sign(signatureInput, privateKey);
-    
-    return `${signatureInput}.${signature}`;
-  }
-
-  private static async sign(input: string, privateKey: string): Promise<string> {
-    const key = await crypto.subtle.importKey(
-      'pkcs8',
-      this.pemToArrayBuffer(privateKey),
-      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-
-    const signature = await crypto.subtle.sign(
-      'RSASSA-PKCS1-v1_5',
-      key,
-      new TextEncoder().encode(input)
-    );
-
-    return btoa(String.fromCharCode(...new Uint8Array(signature)))
-      .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   }
 
   private static pemToArrayBuffer(pem: string): ArrayBuffer {
