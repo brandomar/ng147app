@@ -277,11 +277,15 @@ class EnhancedGoogleSheetsAPI {
     }
 
     const serviceAccountEmail = emailSecret.value;
-    const privateKey = keySecret.value.replace(/\\n/g, '\n');
+    const privateKey = keySecret.value;
 
     if (!serviceAccountEmail || !privateKey) {
       throw new Error('Google service account credentials are empty');
     }
+
+    console.log('🔍 Service account email:', serviceAccountEmail);
+    console.log('🔍 Private key length:', privateKey.length);
+    console.log('🔍 Private key starts with:', privateKey.substring(0, 30));
 
     // Create JWT for service account authentication
     const header = {
