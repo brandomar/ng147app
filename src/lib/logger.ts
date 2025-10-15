@@ -73,10 +73,10 @@ const isProduction = (() => {
 // const isProduction = true;
 
 // Control verbose logging - set to false to reduce noise
-const ENABLE_VERBOSE_LOGGING = false;
+const ENABLE_VERBOSE_LOGGING = true;
 
 // Control development logging - set to false to reduce Vite HMR noise
-const ENABLE_DEV_LOGGING = false;
+const ENABLE_DEV_LOGGING = true;
 
 // Client debugging interface - can be enabled via browser console or admin panel
 // Use localStorage to persist settings across module reloads
@@ -173,6 +173,8 @@ const sanitizeLogData = (data: any): any => {
 };
 
 class LoggerImpl implements Logger {
+  private logCount = 0;
+
   private shouldLog(level: LogLevel): boolean {
     // Client debugging with level filtering
     if (CLIENT_DEBUG_ENABLED) {
@@ -265,7 +267,8 @@ class LoggerImpl implements Logger {
   essential(...args: any[]): void {
     const message = args.join(' ');
     this.addToBuffer('info', `[ESSENTIAL] ${message}`, args.length > 1 ? args.slice(1) : undefined);
-    
+
+    this.logCount++;
     // Essential logs always show (authentication, errors, key state changes)
     // But reduce frequency for data loading logs
     if (!message.includes('Loaded data entries') || this.logCount % 10 === 0) {
@@ -479,11 +482,22 @@ const loadAndApplyDebugSettings = async () => {
           autoOffMinutes = config.debug.autoOffMinutes || 0;
           source = 'config.json';
           
-          // Apply config.json settings
+          // Apply config.json settings and persist to correct localStorage keys
           CLIENT_DEBUG_ENABLED = debugEnabled;
           DEBUG_LEVEL = debugLevel;
           AUTO_OFF_TIMEOUT = autoOffMinutes > 0 ? Date.now() + (autoOffMinutes * 60 * 1000) : 0;
-          
+
+          // Persist to localStorage using the correct keys that the logger checks
+          try {
+            localStorage.setItem('client_debug_enabled', debugEnabled.toString());
+            localStorage.setItem('client_debug_level', debugLevel);
+            if (autoOffMinutes > 0) {
+              localStorage.setItem('debug_auto_off_minutes', autoOffMinutes.toString());
+            }
+          } catch (e) {
+            console.warn('Could not save config.json settings to localStorage:', e);
+          }
+
           console.log('🔧 Debug settings loaded from config.json:', {
             enabled: debugEnabled,
             level: debugLevel,
