@@ -255,11 +255,32 @@ class EnhancedGoogleSheetsAPI {
   }
 
   static async getAccessToken(): Promise<string> {
-    const serviceAccountEmail = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-    const privateKey = Deno.env.get('GOOGLE_PRIVATE_KEY')?.replace(/\\n/g, '\n');
-    
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: secrets, error: secretsError } = await supabaseService
+      .from('secrets')
+      .select('key, value')
+      .in('key', ['GOOGLE_SERVICE_ACCOUNT_EMAIL', 'GOOGLE_PRIVATE_KEY']);
+
+    if (secretsError || !secrets || secrets.length === 0) {
+      throw new Error('Google service account credentials not found in secrets table');
+    }
+
+    const emailSecret = secrets.find(s => s.key === 'GOOGLE_SERVICE_ACCOUNT_EMAIL');
+    const keySecret = secrets.find(s => s.key === 'GOOGLE_PRIVATE_KEY');
+
+    if (!emailSecret || !keySecret) {
+      throw new Error('Missing Google credentials in secrets table');
+    }
+
+    const serviceAccountEmail = emailSecret.value;
+    const privateKey = keySecret.value.replace(/\\n/g, '\n');
+
     if (!serviceAccountEmail || !privateKey) {
-      throw new Error('Google service account credentials not configured');
+      throw new Error('Google service account credentials are empty');
     }
 
     // Create JWT for service account authentication
