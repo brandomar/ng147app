@@ -26,6 +26,7 @@ Multi-tenant dashboard application for tracking business metrics with Google She
 
 ### 📚 Documentation
 - **[New Instance Setup Guide](docs/deployment/NEW_INSTANCE_SETUP.md)** - Complete walkthrough for deploying to a new Supabase project and Google account
+- **[Database Restore Guide](docs/deployment/DATABASE_RESTORE.md)** - Complete guide for restoring from SQL backups
 - **[AGENTS.md](AGENTS.md)** - Comprehensive architecture guide for AI agents and developers
 - **[CHANGELOG.md](CHANGELOG.md)** - Detailed version history
 
@@ -101,9 +102,12 @@ Multi-tenant dashboard application for tracking business metrics with Google She
    ```bash
    # Link to your Supabase project
    npx supabase link --project-ref your-project-ref
-   
+
    # Run all migrations
    npx supabase db push
+
+   # Or restore from backup (see Database Restore Guide)
+   node scripts/restore-database.js --target local --file supabase/backups/sql-scripts/complete_production_schema.sql
    ```
 
 4. **Development Server**
@@ -197,6 +201,23 @@ supabase migration new migration_name
 # Apply migrations
 supabase db push
 ```
+
+### Database Backup & Restore
+```bash
+# Export database to SQL file
+node scripts/export-database.js
+
+# Restore from backup file (local)
+node scripts/restore-database.js --target local --file supabase/backups/sql-scripts/complete_production_schema.sql
+
+# Restore to production (requires confirmation)
+node scripts/restore-database.js --target production --file backup.sql
+
+# Validate backup file without restoring
+node scripts/restore-database.js --dry-run --file backup.sql
+```
+
+See **[Database Restore Guide](docs/deployment/DATABASE_RESTORE.md)** for detailed instructions.
 
 ### Edge Functions
 ```bash

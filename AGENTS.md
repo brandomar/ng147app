@@ -29,6 +29,9 @@ cp .env.example .env.local
 # Database setup (DO NOT use db reset - can cause data loss)
 npx supabase db push
 
+# Or restore from backup
+node scripts/restore-database.js --target local
+
 # Start development (user runs this separately)
 # npm run dev
 ```
@@ -38,9 +41,12 @@ npx supabase db push
 - `npm run lint` - Run ESLint
 - `npm run validate-architecture` - Check architectural compliance
 - `npx supabase db push` - Apply database migrations safely
+- `node scripts/restore-database.js` - Restore database from backup (see Database Restore Guide)
+- `node scripts/export-database.js` - Export database to SQL backup files
 - **🚨 CRITICAL: NEVER use**: `npx supabase db reset` or `npx supabase stop` (CAUSES DATA LOSS)
 - **🚨 CRITICAL: NEVER suggest database resets** - This will cause permanent data loss
 - **🚨 CRITICAL: NEVER run database resets** - This will destroy all user data
+- **🚨 CRITICAL: NEVER execute SQL file paths as commands** - Always use proper restore methods (see docs/deployment/DATABASE_RESTORE.md)
 
 ## Architecture Rules & Patterns
 

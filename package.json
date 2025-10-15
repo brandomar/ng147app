@@ -15,7 +15,10 @@
     "build:undeniable": "node scripts/build-whitelabel.js undeniable",
     "build:acme": "node scripts/build-whitelabel.js acme",
     "build:techcorp": "node scripts/build-whitelabel.js techcorp",
-    "test:application": "node scripts/test-application.js"
+    "test:application": "node scripts/test-application.js",
+    "db:backup": "node scripts/export-database.js",
+    "db:restore": "node scripts/restore-database.js",
+    "db:validate": "node scripts/validate-backup.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.2",
